@@ -54,7 +54,41 @@ The following instructions require you to have [Go version 1.21 or higher](https
 
 * Command line options and operational details: [certspotter(8) man page](man/certspotter.md)
 * The script interface: [certspotter-script(8) man page](man/certspotter-script.md)
+* Authorizing known certificates: [certspotter-authorize(8) man page](man/certspotter-authorize.md)
 * [Change Log](CHANGELOG.md)
+
+## Authorizing Known Certificates to Prevent Notifications
+
+If you know in advance that a certificate will be issued (for example, because you
+just requested it from a certificate authority), you can use the **certspotter-authorize**
+command to preemptively authorize it. This prevents certspotter from sending
+notifications when the certificate is discovered in Certificate Transparency logs.
+
+To install certspotter-authorize:
+
+```
+go install software.sslmate.com/src/certspotter/cmd/certspotter-authorize@latest
+```
+
+To authorize a certificate:
+
+```
+certspotter-authorize -cert /path/to/cert.pem
+```
+
+You can also read the certificate from stdin:
+
+```
+cat cert.pem | certspotter-authorize -cert -
+```
+
+The authorization is based on the certificate's TBSCertificate hash (the same hash
+used in the `TBS_SHA256` environment variable in notification scripts), so it will
+suppress notifications for both the certificate and its corresponding precertificate.
+
+Note: Authorization only works when certspotter is saving certificates (the default).
+If you run certspotter with `-no_save`, it will not check for authorized certificates
+and will send duplicate notifications.
 
 ## What certificates are detected by Cert Spotter?
 
