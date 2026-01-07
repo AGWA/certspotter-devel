@@ -1,4 +1,4 @@
-// Copyright (C) 2026 Opsmate, Inc.
+// Copyright (C) 2025 Opsmate, Inc.
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License, v. 2.0. If a copy of the MPL was not distributed
@@ -13,9 +13,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -103,7 +105,8 @@ func computeTBSHash(certDER []byte) ([32]byte, error) {
 func createNotifiedMarker(stateDir string, tbsHash [32]byte) (string, error) {
 	tbsHex := hex.EncodeToString(tbsHash[:])
 
-	tbsDir := filepath.Join(stateDir, "certs", tbsHex[0:2])
+	certsDir := filepath.Join(stateDir, "certs")
+	tbsDir := filepath.Join(certsDir, tbsHex[0:2])
 	notifiedPath := filepath.Join(tbsDir, "."+tbsHex+".notified")
 
 	// Check if already notified
@@ -111,8 +114,13 @@ func createNotifiedMarker(stateDir string, tbsHash [32]byte) (string, error) {
 		return notifiedPath, nil
 	}
 
-	// Create directory if needed
-	if err := os.MkdirAll(tbsDir, 0777); err != nil {
+	// Create certs directory if needed
+	if err := os.Mkdir(certsDir, 0777); err != nil && !errors.Is(err, fs.ErrExist) {
+		return "", fmt.Errorf("error creating certs directory: %w", err)
+	}
+
+	// Create TBS-specific subdirectory if needed
+	if err := os.Mkdir(tbsDir, 0777); err != nil && !errors.Is(err, fs.ErrExist) {
 		return "", fmt.Errorf("error creating directory: %w", err)
 	}
 
