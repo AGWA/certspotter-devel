@@ -102,9 +102,6 @@ func computeTBSHash(certDER []byte) ([32]byte, error) {
 
 func createNotifiedMarker(stateDir string, tbsHash [32]byte) (string, error) {
 	tbsHex := hex.EncodeToString(tbsHash[:])
-	if len(tbsHex) < 2 {
-		return "", fmt.Errorf("TBS hash hex is too short: %d characters", len(tbsHex))
-	}
 
 	tbsDir := filepath.Join(stateDir, "certs", tbsHex[0:2])
 	notifiedPath := filepath.Join(tbsDir, "."+tbsHex+".notified")
